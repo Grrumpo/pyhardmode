@@ -10,7 +10,7 @@ for name, recipe in pairs(data.raw.recipe) do
             recipe.energy_required = 20
         elseif name == "zipir1-pyvoid" or name == "zipir1-pyvoid-hatchery" then
             recipe.enabled = false
-            recipe.categories = {"hpf"}
+            recipe.category = "hpf"
             recipe.flags = {}
             recipe.hidden = nil
         else
@@ -39,3 +39,47 @@ if type(data.data_crawler) == "string" and string.sub(data.data_crawler, 1, 5) =
 end
 
 RECIPE("zipir1-pyvoid"):add_unlock("zipir")
+-- Global Factorio 2.0+ Recipe Category Fix for pyhardmode
+for _, recipe in pairs(data.raw.recipe) do
+    if recipe.category or recipe.additional_categories then
+        recipe.categories = recipe.categories or {}
+        if recipe.category then
+            table.insert(recipe.categories, recipe.category)
+            recipe.category = nil
+        end
+        if recipe.additional_categories then
+            for _, cat in ipairs(recipe.additional_categories) do
+                table.insert(recipe.categories, cat)
+            end
+            recipe.additional_categories = nil
+        end
+    end
+end
+-- Global Factorio 2.0+ API Patch for pyhardmode
+for _, recipe in pairs(data.raw.recipe) do
+    -- Fix legacy category fields
+    if recipe.category or recipe.additional_categories then
+        recipe.categories = recipe.categories or {}
+        if recipe.category then
+            table.insert(recipe.categories, recipe.category)
+            recipe.category = nil
+        end
+        if recipe.additional_categories then
+            for _, cat in ipairs(recipe.additional_categories) do
+                table.insert(recipe.categories, cat)
+            end
+            recipe.additional_categories = nil
+        end
+    end
+
+    -- Fix legacy probability field in recipe results
+    local results = recipe.results or (recipe.normal and recipe.normal.results)
+    if results then
+        for _, result in ipairs(results) do
+            if result.probability then
+                result.independent_probability = result.probability
+                result.probability = nil
+            end
+        end
+    end
+end
